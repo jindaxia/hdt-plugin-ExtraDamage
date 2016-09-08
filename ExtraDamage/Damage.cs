@@ -11,7 +11,7 @@ using static HearthDb.Enums.GameTag;
 using System.Windows;
 using HearthDb;
 using System;
-using Hearthstone_Deck_Tracker.Hearthstone;
+using Hearthstone_Deck_Tracker.Utility.BoardDamage;
 
 namespace ExtraDamage
 {
@@ -46,7 +46,7 @@ namespace ExtraDamage
 		// Update the card list on player's turn
 		internal void TurnStart(ActivePlayer player)
 		{
-			_mana = Core.Game.PlayerEntity.GetTag(GameTag.RESOURCES);
+			_mana = Core.Game.PlayerEntity.GetTag(GameTag.RESOURCES) + 1;
 
 			if (player == ActivePlayer.Player)
 			{
@@ -80,6 +80,13 @@ namespace ExtraDamage
 				else
 				{
 					UpdateDamage(BestValue(costDamagePairs, _mana, costDamagePairs.Count));
+					
+					Hearthstone_Deck_Tracker.Utility.Logging.Log.Debug($"Mana: {_mana}");
+					foreach (var c in costDamagePairs.Where(x => x.isPicked))
+					{
+						Hearthstone_Deck_Tracker.Utility.Logging.Log.Debug($"Picked Card: {c.Name}");
+					}
+					
 				}
 			}
 		}
@@ -98,6 +105,7 @@ namespace ExtraDamage
 					var value = BestValue(pairs, costLimit - pairs[itemLimit - 1].Cost, itemLimit - 1);
 					if (value + pairs[itemLimit-1].Damage > lastValue)
 					{
+						pairs[itemLimit - 1].isPicked = true;
 						return value + pairs[itemLimit - 1].Damage;
 					}
 					else
@@ -114,6 +122,7 @@ namespace ExtraDamage
 				}
 				else
 				{
+					pairs[0].isPicked = true;
 					return pairs[0].Damage;
 				}
 				
@@ -139,6 +148,9 @@ namespace ExtraDamage
 						case CardIds.Collectible.Druid.SavageRoar:
 							result.Add(new CostDamage("SavageRoar", card.Cost, 2 * (minions + hero)));
 							break;
+						case CardIds.Collectible.Warlock.PowerOverwhelming:
+							result.Add(new CostDamage(card.Name, card.Cost, 4 * maxSingleAttackRate));
+							break;
 						case CardIds.Collectible.Mage.Fireball:
 						case CardIds.Collectible.Mage.Frostbolt:
 						case CardIds.Collectible.Mage.Flamestrike:
@@ -159,7 +171,7 @@ namespace ExtraDamage
 					switch (card.CardId)
 					{
 						case CardIds.Collectible.Neutral.AbusiveSergeant:
-						case CardIds.Collectible.Neutral.AntiqueHealbot:
+						case CardIds.Collectible.Neutral.DarkIronDwarf:
 							result.Add(new CostDamage(card.Name, card.Cost, 2 * maxSingleAttackRate));
 							break;
 						default:
@@ -203,7 +215,18 @@ namespace ExtraDamage
 
 		private void UpdateDamage(int damage)
 		{
-			control.Text = $"+{damage}";
+			BoardState board = new BoardState();
+			Hearthstone_Deck_Tracker.Utility.Logging.Log.Debug($"Board Damage: {board.Player.Damage}");
+			if (board.Player.Damage + damage >= board.Opponent.Hero.Health)
+			{
+				control.Text = $"+{damage} Kill!!";
+				control.FontSize = 30;
+			}
+			else
+			{
+				control.Text = $"+{damage}";
+				control.FontSize = 20;
+			}
 			double fromLeft = Helper.GetScaledXPos(Config.Instance.AttackIconPlayerHorizontalPosition / 100, (int)CoreAPI.OverlayCanvas.Width, (4.0 / 3.0) / (CoreAPI.OverlayCanvas.Width / CoreAPI.OverlayCanvas.Height)) + 52;
 			double fromTop = CoreAPI.OverlayCanvas.Height * Config.Instance.AttackIconPlayerVerticalPosition / 100 + 26;
 
@@ -211,20 +234,6 @@ namespace ExtraDamage
 			Canvas.SetTop(control, fromTop);
 			control.Visibility = Visibility.Visible;
 		}
-
-		// Calculate the mana opponent will have on his next turn
-		//internal int AvailableMana()
-		//{
-		//	var opp = Opponent;
-		//	if (opp != null)
-		//	{
-		//		var mana = opp.GetTag(GameTag.RESOURCES);
-		//		var overload = opp.GetTag(GameTag.OVERLOAD_OWED);
-		//		// looking a turn ahead, so add one mana 
-		//		_mana = mana + 1 - overload;
-		//	}
-		//	return _mana;
-		//}
 
 	}
 }

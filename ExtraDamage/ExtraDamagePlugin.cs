@@ -11,17 +11,17 @@ namespace ExtraDamage
 	{
 		public string Author
 		{
-			get { return "andburn"; }
+			get { return "jindaxia"; }
 		}
 
 		public string ButtonText
 		{
-			get { return "Settings"; }
+			get { return ""; }
 		}
 
 		public string Description
 		{
-			get { return "A simple example plugin showing the oppoents class cards on curve."; }
+			get { return "A Plugin that shows how many extra damage can be take this turn"; }
 		}
 
 		public MenuItem MenuItem
@@ -31,7 +31,7 @@ namespace ExtraDamage
 
 		public string Name
 		{
-			get { return "ExtraDamage"; }
+			get { return "Extra Damage"; }
 		}
 
 		public void OnButtonPress()

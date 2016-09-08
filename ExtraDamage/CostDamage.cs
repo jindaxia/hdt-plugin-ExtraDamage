@@ -11,12 +11,14 @@ namespace ExtraDamage
 		public string Name { get; }
 		public int Cost { get; }
 		public int Damage { get; }
+		public bool isPicked { get;set; }
 
 		public CostDamage(string name, int cost, int damage)
 		{
 			Name = name;
 			Cost = cost;
 			Damage = damage;
+			isPicked = false;
 		}
 
 	}
